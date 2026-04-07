@@ -1,0 +1,5 @@
+data
+data_orig
+RNN.tmp
+.direnv
+.envrc

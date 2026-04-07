@@ -1,0 +1,31 @@
+ {
+        "dataset": "UZK",
+        "preprocess": {
+            "freq": "1h",
+            "use_interp": false,
+            "interp_method": "",
+            "interp_limit": 12,
+            "remove_outliers_params": {
+                "rm_type": "clip",
+                "X_local": true,
+                "y_local": false,
+                "window": 12,
+                "k_iqr": 1.5
+            }
+        },
+        "feature_selector": {
+            "feature_select_method": "pls",
+            "pls_depth": 3
+        },
+        "trainer": {
+            "lag": 48,
+            "gru": [8, 1],
+            "l2": 0.1,
+            "decay": 0.0,
+            "epochs": 50,
+            "batch": 8,
+            "lr": 1e-3,
+            "min_lr": 1e-4,
+            "early_stoping": 20
+        }
+    }
