@@ -1,3 +1,4 @@
+from typing import Literal, Callable, cast
 import json
 import math
 import torch
@@ -45,7 +46,11 @@ def get_data(name="UZK"):
 
 
 def _interp(
-    X: pd.DataFrame, y: pd.DataFrame, method="spline", interp_limit=48, freq="1h"
+    X: pd.DataFrame,
+    y: pd.DataFrame,
+    method: Literal["spline"] = "spline",
+    interp_limit=48,
+    freq="1h",
 ):
     interp_X = (
         X.asfreq(freq)
@@ -63,26 +68,48 @@ def _interp(
 
 
 def _scale_train_test(
-    X: pd.DataFrame, y: pd.DataFrame, split=0.6, scaler=StandardScaler
-):
-    result = tuple()
-    stop = y.index[int(len(y) * split)]
-    stop_plus_one = y.index[int(len(y) * split) + 1]
+    X: pd.DataFrame,
+    y: pd.DataFrame,
+    split: float = 0.6,
+    scaler: Callable[[], StandardScaler] | None = StandardScaler,
+) -> tuple[
+    pd.DataFrame,
+    pd.DataFrame,
+    StandardScaler | None,
+    pd.DataFrame,
+    pd.DataFrame,
+    StandardScaler | None,
+]:
+    split_idx = int(len(y) * split)
 
-    for item in X, y:
-        train = item[:stop]
-        test = item[stop_plus_one:]
+    def split_and_scale(
+        data: pd.DataFrame,
+    ) -> tuple[pd.DataFrame, pd.DataFrame, StandardScaler | None]:
+        train = data.iloc[:split_idx]
+        test = data.iloc[split_idx + 1 :]
 
-        if scaler:
-            s = scaler().set_output(transform="pandas")
-            train = s.fit_transform(train)
-            test = s.transform(test)
-        else:
-            s = None
+        if scaler is None:
+            return train, test, None
 
-        result += (train, test, s)
+        s = scaler()
+        s.set_output(transform="pandas")
 
-    return result
+        train_scaled = cast(pd.DataFrame, s.fit_transform(train))
+        test_scaled = cast(pd.DataFrame, s.transform(test))
+
+        return train_scaled, test_scaled, s
+
+    X_train, X_test, X_scaler = split_and_scale(X)
+    y_train, y_test, y_scaler = split_and_scale(y)
+
+    return (
+        X_train,
+        X_test,
+        X_scaler,
+        y_train,
+        y_test,
+        y_scaler,
+    )
 
 
 def _generalize_indices(X, y, freq):
@@ -182,7 +209,7 @@ def preprocess_data(
     y: pd.DataFrame,
     freq="1h",
     use_interp=True,
-    interp_method="spline",
+    interp_method: Literal["spline"] = "spline",
     interp_limit=24,
     remove_outliers_params={
         "rm_type": "drop",
@@ -255,8 +282,8 @@ def plot_features(data: pd.DataFrame, names=None, index_name=None):
 def train_and_evaluate_model(
     X_train: pd.DataFrame,
     y_train: pd.DataFrame,
-    X_valid: pd.DataFrame = None,
-    y_valid: pd.DataFrame = None,
+    X_valid: pd.DataFrame | None = None,
+    y_valid: pd.DataFrame | None = None,
     lag=24,
     gru=(8, 1),
     l2=0.0,
@@ -268,16 +295,16 @@ def train_and_evaluate_model(
     early_stoping=10,
     **args,
 ):
-    X_train, y_train, train_index = sliding_window(X_train, y_train, lag=lag, dropna=1)
+    X_train, y_train, train_index = sliding_window(X_train, y_train, lag=lag, dropna=1)  # type: ignore
     if X_valid is not None and y_valid is not None:
         X_valid, y_valid, valid_index = sliding_window(
             X_valid, y_valid, lag=lag, dropna=1
-        )
+        )  # type: ignore
 
-    X_train = torch.tensor(X_train).float()
-    X_valid = torch.tensor(X_valid).float()
-    y_train = torch.tensor(y_train).float()
-    y_valid = torch.tensor(y_valid).float()
+    X_train_tensor = torch.tensor(X_train).float()
+    X_valid_tensor = torch.tensor(X_valid).float()
+    y_train_tensor = torch.tensor(y_train).float()
+    y_valid_tensor = torch.tensor(y_valid).float()
 
     model = RNN(
         features_in=X_train.shape[-1],
@@ -291,10 +318,10 @@ def train_and_evaluate_model(
     )
 
     result = model.evaluate(
-        X_train,
-        y_train,
-        X_valid=X_valid,
-        y_valid=y_valid,
+        X_train_tensor,
+        y_train_tensor,
+        X_valid=X_valid_tensor,
+        y_valid=y_valid_tensor,
         train_index=train_index,
         valid_index=valid_index,
         verbose=True,
