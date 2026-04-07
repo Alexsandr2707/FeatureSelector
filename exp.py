@@ -428,8 +428,8 @@ def run_experiment(params=DEFAULT_EXPERIMENT_PARAMS):
 
 if __name__ == "__main__":
 
-    params_files = ["data_raw_params.json", "data_interp_params.json"]
-    params_file = "data_interp_params.json"
+    params_files = ["configs/data_raw_params.json", "configs/data_interp_params.json"]
+    params_file = "configs/data_interp_params.json"
 
     with open(params_file) as f:
         params = json.load(f)
