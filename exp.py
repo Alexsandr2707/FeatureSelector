@@ -5,6 +5,7 @@ import torch
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+from pathlib import Path
 from sklearn.preprocessing import StandardScaler
 import scipy.stats as stats
 
@@ -13,17 +14,30 @@ from method.rnn import RNN
 from method.vector import sliding_window
 from method.pls import PLSTransformer
 
-PARAMS = {
+DATASET_PARAMS = {
     "UZK": {
         "data": "data/uzk.csv",
         "lab": "data/uzk_lab.csv",
         "target": "UZK.Q.81AY00108.FINALPOINT",
         "freq": "1h",
-        "time_intervals": ("2022", "2024"),
     }
 }
 
-DEFAULT_EXPERIMENT_PARAMS_FILE = "configs/data_raw_params.json"
+
+COFIGS_PATH = Path("configs")
+
+DEFAULT_EXPERIMENT_PARAMS_FILES = {
+    "full": {
+        "raw": COFIGS_PATH / "data_raw_params.json",
+        "interp": COFIGS_PATH / "data_interp_params.json",
+    },
+    "short": {
+        "raw": COFIGS_PATH / "data_short_raw_params.json",
+        "interp": COFIGS_PATH / "data_short_interp_params.json",
+    },
+}
+
+DEFAULT_EXPERIMENT_PARAMS_FILE = DEFAULT_EXPERIMENT_PARAMS_FILES["full"]["interp"]
 DEFAULT_EXPERIMENT_PARAMS = {}
 
 with open(DEFAULT_EXPERIMENT_PARAMS_FILE) as f:
@@ -35,13 +49,13 @@ def print_del(text="", sep="="):
 
 
 def get_data(name="UZK"):
-    X = pd.read_csv(PARAMS[name]["data"], index_col=0, parse_dates=True)
-    Y = pd.read_csv(PARAMS[name]["lab"], index_col=0, parse_dates=True)
-    y = Y[PARAMS[name]["target"]]
+    X = pd.read_csv(DATASET_PARAMS[name]["data"], index_col=0, parse_dates=True)
+    Y = pd.read_csv(DATASET_PARAMS[name]["lab"], index_col=0, parse_dates=True)
+    y = Y[DATASET_PARAMS[name]["target"]]
     y = pd.DataFrame(y)
 
-    X = X.resample(PARAMS[name]["freq"]).first().dropna()
-    y = y.resample(PARAMS[name]["freq"]).first().dropna()
+    X = X.resample(DATASET_PARAMS[name]["freq"]).first().dropna()
+    y = y.resample(DATASET_PARAMS[name]["freq"]).first().dropna()
     return X, y
 
 
@@ -459,12 +473,7 @@ def run_experiment(params=DEFAULT_EXPERIMENT_PARAMS):
 
 if __name__ == "__main__":
 
-    params_files = [
-        "configs/data_short_interp_params.json",
-        "configs/data_raw_params.json",
-        "configs/data_interp_params.json",
-    ]
-    params_file = "configs/data_short_raw_params.json"
+    params_file = DEFAULT_EXPERIMENT_PARAMS_FILES["full"]["interp"]
 
     with open(params_file) as f:
         params = json.load(f)

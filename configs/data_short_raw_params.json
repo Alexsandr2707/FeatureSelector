@@ -1,33 +1,35 @@
 {
-        "dataset": "UZK",
-        "preprocess": {
-            "freq": "1h",
-            "use_interp": false,
-            "interp_method": "time",  
-            "interp_limit": 12,
-            "remove_outliers_params": {
-                "rm_type": "clip",
-                "X_local": true,
-                "y_local": false,
-                "window": 12,
-                "k_iqr": 1.5
-            },
-            "drop_intervals": [["2021", "2023-03-17"]]
+    "dataset": "UZK",
+    
+    "preprocess": {
+        "freq": "1h",
+        "use_interp": false,
+        "interp_method": "time",  
+        "interp_limit": 12,
+        "remove_outliers_params": {
+            "rm_type": "clip",
+            "X_local": true,
+            "y_local": false,
+            "window": 12,
+            "k_iqr": 1.5
         },
+        "drop_intervals": [["2021", "2023-03-17"]]
+    },
 
-        "feature_selector": {
-            "feature_select_method": "pls",
-            "pls_depth": 2
-        },
-        "trainer": {
-            "lag": 24,
-            "gru": [8, 1],
-            "l2": 0.5,
-            "decay": 0.0,
-            "epochs": 50,
-            "batch": 8,
-            "lr": 1e-2,
-            "min_lr": 1e-4,
-            "early_stoping": 20
-        }
+    "feature_selector": {
+        "feature_select_method": "pls",
+        "pls_depth": 2
+    },
+
+    "trainer": {
+        "lag": 24,
+        "gru": [8, 1],
+        "l2": 0.5,
+        "decay": 0.0,
+        "epochs": 50,
+        "batch": 8,
+        "lr": 1e-2,
+        "min_lr": 1e-4,
+        "early_stoping": 20
     }
+}
