@@ -22,7 +22,11 @@ PARAMS = {
     }
 }
 
+DEFAULT_EXPERIMENT_PARAMS_FILE = "configs/data_raw_params.json"
 DEFAULT_EXPERIMENT_PARAMS = {}
+
+with open(DEFAULT_EXPERIMENT_PARAMS_FILE) as f:
+    DEFAULT_EXPERIMENT_PARAMS = json.load(f)
 
 
 def print_del(text="", sep="="):
